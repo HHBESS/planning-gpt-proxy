@@ -39,6 +39,14 @@ app.get('/callback', async (req, res) => {
 app.get('/list-files', async (req, res) => {
   const { access_token, folderId } = req.query;
 
+  console.log("🚀 Incoming request to /list-files");
+  console.log("Access Token:", access_token ? access_token.slice(0, 10) + "..." : "MISSING");
+  console.log("Folder ID:", folderId || "None");
+
+  if (!access_token) {
+    return res.status(400).json({ error: "Missing access_token in query" });
+  }
+
   const queryParts = ["mimeType='application/pdf'"];
   if (folderId) {
     queryParts.push(`'${folderId}' in parents`);
@@ -57,6 +65,7 @@ app.get('/list-files', async (req, res) => {
     });
     res.json(data);
   } catch (error) {
+    console.error("❌ Error calling Google Drive API:", error.response?.data || error.message);
     res.status(500).json({ error: error.toString() });
   }
 });
