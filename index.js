@@ -1,7 +1,6 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -10,13 +9,11 @@ const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
 const redirect_uri = process.env.REDIRECT_URI;
 
-// Step 1: Redirect user to Google OAuth
 app.get('/auth', (req, res) => {
   const authURL = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=https://www.googleapis.com/auth/drive.readonly&access_type=offline&prompt=consent`;
   res.redirect(authURL);
 });
 
-// Step 2: Handle OAuth callback
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   try {
@@ -35,17 +32,8 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// Step 3: Use access token to list files
 app.get('/list-files', async (req, res) => {
   const { access_token, folderId } = req.query;
-
-  console.log("🚀 Incoming request to /list-files");
-  console.log("Access Token:", access_token ? access_token.slice(0, 10) + "..." : "MISSING");
-  console.log("Folder ID:", folderId || "None");
-
-  if (!access_token) {
-    return res.status(400).json({ error: "Missing access_token in query" });
-  }
 
   const queryParts = ["mimeType='application/pdf'"];
   if (folderId) {
@@ -65,7 +53,10 @@ app.get('/list-files', async (req, res) => {
     });
     res.json(data);
   } catch (error) {
-    console.error("❌ Error calling Google Drive API:", error.response?.data || error.message);
+    console.error("❌ Google API error:", error.response?.data || error.message);
     res.status(500).json({ error: error.toString() });
   }
 });
+
+// ✅ This is the key change
+module.exports = app;
