@@ -37,14 +37,21 @@ app.get('/callback', async (req, res) => {
 
 // Step 3: Use access token to list files
 app.get('/list-files', async (req, res) => {
-  const { access_token } = req.query;
+  const { access_token, folderId } = req.query;
+
+  const queryParts = ["mimeType='application/pdf'"];
+  if (folderId) {
+    queryParts.push(`'${folderId}' in parents`);
+  }
+  const query = queryParts.join(" and ");
+
   try {
     const { data } = await axios.get('https://www.googleapis.com/drive/v3/files', {
       headers: {
         Authorization: `Bearer ${access_token}`,
       },
       params: {
-        q: "mimeType='application/pdf'",
+        q: query,
         fields: 'files(id, name)',
       },
     });
@@ -52,9 +59,4 @@ app.get('/list-files', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.toString() });
   }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`OAuth proxy listening on port ${PORT}`);
 });
